@@ -10,6 +10,7 @@ type Logger struct {
 }
 
 func (l *Logger) Logf(format string, args ...any) {
+	format = "\n" + format
 	l.writer.Write([]byte(fmt.Sprintf(format, args...)))
 }
 

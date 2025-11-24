@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/sanjayJ369/raft-consensus/internal/log"
+	simpletimer "github.com/sanjayJ369/raft-consensus/internal/simpleTimer"
 	statemachine "github.com/sanjayJ369/raft-consensus/internal/stateMachine"
 	"github.com/sanjayJ369/raft-consensus/internal/types"
 )
@@ -69,3 +70,34 @@ type Node struct {
 // RequestVote
 // AppendEntriesRPC
 // InstallSnapshot RPC
+
+func NewNode(Id types.NodeId,
+	stateMachine statemachine.KVStore,
+	peerIDs []types.NodeId,
+	nodesInCluster int,
+	config Config,
+	transport types.Transport,
+	lgr types.Logger) *Node {
+	return &Node{
+		state:          Follower, // every node starts as follower
+		Id:             Id,
+		smachine:       stateMachine,
+		peerIDs:        peerIDs,
+		nodesInCluster: nodesInCluster,
+		config:         config,
+		transport:      transport,
+		lgr:            lgr,
+
+		log:           make([]log.LogEntry, 100), // initally reserve like 100 log entries
+		electionTimer: simpletimer.NewSimpleTimer(),
+		term:          0, // start from term zero
+		votes:         0,
+		votedFor:      nil, // not yet voted
+		lastApplied:   -1,
+		comittedIndex: -1,
+
+		// leader specific states
+		nextIndex:  make(map[types.NodeId]types.Index),
+		matchIndex: make(map[types.NodeId]types.Index),
+	}
+}

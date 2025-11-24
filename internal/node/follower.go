@@ -9,6 +9,7 @@ import (
 
 // EnterFollower sets the state of the node to follower
 func (n *Node) EnterFollower() {
+	n.lgr.Logf("Entered Follower State: %v", n.Id)
 	// every node starts as a follwer
 	// things the follower must do
 
@@ -32,6 +33,7 @@ func (n *Node) StartElectionTimer() {
 }
 
 func (n *Node) ResetElectionTimer() {
+	n.lgr.Logf("Reset Election Timer NodeId: %v", n.Id)
 	n.electionTimer.Stop()
 	n.StartElectionTimer()
 }
@@ -39,6 +41,7 @@ func (n *Node) ResetElectionTimer() {
 // HandleVoteRequest handles the vote request received from the candidate
 // this is usually invoked by Transport.SendRequestVote
 func (n *Node) HandleVoteRequest(req types.VoteRequest) types.VoteResponse {
+	n.lgr.Logf("Received Vote Request From: %v, \t Request: %v", req.CanidateId, req)
 	// grant an vote
 	// if the candidate has newer logs vote for them
 	// (safety mechanism)

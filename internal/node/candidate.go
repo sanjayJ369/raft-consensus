@@ -8,13 +8,14 @@ import (
 
 // StartLeader sets the state of the node to a candidate
 func (n *Node) EnterCandidate() {
+	n.lgr.Logf("Entering Canidate State: nodeId: %v", n.Id)
 	// once the node enters a canidate state
 	// start a new election term
 	n.StartNewElectionTerm()
-
 }
 
 func (n *Node) StartNewElectionTerm() {
+	n.lgr.Logf("Starting New Election Term: nodeId: %v", n.Id)
 	// it should increment it's election term
 	n.term += 1
 	n.votedFor = &n.Id // vote itself
@@ -39,6 +40,7 @@ func (n *Node) StartNewElectionTerm() {
 // synchronization (for example, holding the Node's lock) is in place
 // before calling this method.
 func (n *Node) HandleVoteResponse(res types.VoteResponse) {
+	n.lgr.Logf("Recevied Response from Node: %v", res.From)
 	if n.state != Candidate {
 		return
 	}
