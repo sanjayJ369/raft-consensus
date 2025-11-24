@@ -20,22 +20,40 @@ type Config struct {
 	ElectionTimeoutMax time.Duration
 }
 
-// represents election term
-type Term int64
+type NodeState int
+
+const (
+	Follower NodeState = iota
+	Candidate
+	Leader
+)
 
 // Node represents the state of each server node
 // in a general distributed systems setting
 type Node struct {
-	Id            types.NodeId         // Node Id
-	smachine      statemachine.KVStore // state machine which is simple key value store
-	log           []log.LogEntry       // replicated log store
-	peers         []*Node              // other nodes in the cluseter
-	lgr           types.Logger         // logger to log....
-	electionTimer types.Timer          // election timer
-	config        Config               // stores all the config fiels
-	term          types.Term           // current election term
-	votes         []types.Vote         // votes of the current term
-	votedFor      types.NodeId         // to whom did the node vote for in the current term
+	// node and cluster info
+	state          NodeState
+	Id             types.NodeId         // Node Id
+	smachine       statemachine.KVStore // state machine which is simple key value store
+	peerIDs        []types.NodeId       // other nodes in the cluster
+	nodesInCluster int                  // number of peers + 1
+	config         Config               // stores all the config fiels
+
+	transport types.Transport // way to communicate with othern odes
+	lgr       types.Logger    // logger to log....
+
+	// node states
+	log           []log.LogEntry // replicated log store
+	electionTimer types.Timer    // election timer
+	term          types.Term     // current election term
+	votes         int            // votes of the current term
+	votedFor      *types.NodeId  // to whom did the node vote for in the current term
+	lastApplied   types.Index    // last log entry that is being applied to the state machine
+	comittedIndex types.Index    // highest log entry that is known to be comitted
+
+	// leader specific states
+	nextIndex  map[types.NodeId]types.Index // index to be shared with the follower
+	matchIndex map[types.NodeId]types.Index
 }
 
 // StartNewElection starts a new election

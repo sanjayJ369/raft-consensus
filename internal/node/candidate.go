@@ -1,6 +1,10 @@
 package node
 
-import "github.com/sanjayJ369/raft-consensus/internal/types"
+import (
+	"math"
+
+	"github.com/sanjayJ369/raft-consensus/internal/types"
+)
 
 // StartLeader sets the state of the node to a candidate
 func (n *Node) EnterCandidate() {
@@ -13,24 +17,40 @@ func (n *Node) EnterCandidate() {
 func (n *Node) StartNewElectionTerm() {
 	// it should increment it's election term
 	n.term += 1
-	n.votedFor = n.Id // vote itself
+	n.votedFor = &n.Id // vote itself
+	n.votes = 1
 
 	// todo: ask for the votes from other nodes
-
+	prevLog := n.log[len(n.log)-1] // get the most recent log
+	for _, nodeId := range n.peerIDs {
+		go n.transport.SendVoteRequest(nodeId, types.VoteRequest{
+			CanidateId:   n.Id,
+			FollowerId:   nodeId,
+			Term:         n.term,
+			PrevLogTerm:  prevLog.Term,
+			PrevLogIndex: types.Index(prevLog.Index),
+		})
+	}
 }
 
-// VoteRequest
-type VoteRequest struct {
-	canidateId   types.NodeId
-	followerId   types.NodeId
-	prevLogTerm  types.Term
-	prevLogIndex types.Index
-}
+// HandleVoteResponse processes a VoteResponse received from a follower.
+// It is typically invoked by the transport layer when a follower replies
+// to this node's vote request. The caller must ensure any required
+// synchronization (for example, holding the Node's lock) is in place
+// before calling this method.
+func (n *Node) HandleVoteResponse(res types.VoteResponse) {
+	if n.state != Candidate {
+		return
+	}
 
-// VoteResponse
-type VoteResponse types.Vote
+	// if recevied majority of the votes
+	// become leader
+	majoryReq := math.Ceil(float64(n.nodesInCluster) / 2)
+	if res.VoteGranted {
+		n.votes++
+	}
 
-func (n *Node) HandleRequestVote(req VoteRequest) VoteResponse {
-	// grant an vote
-	return types.Vote{}
+	if n.votes > int(majoryReq) {
+		n.EnterLeader()
+	}
 }

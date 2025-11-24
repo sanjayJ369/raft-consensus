@@ -10,3 +10,15 @@ type Vote struct {
 	From        NodeId // follower node id
 	To          NodeId // candidate node id
 }
+
+// VoteRequest
+type VoteRequest struct {
+	CanidateId   NodeId
+	FollowerId   NodeId
+	PrevLogTerm  Term  // term of the last log entry
+	PrevLogIndex Index // index of the last log entry
+	Term         Term  // current election term
+}
+
+// VoteResponse
+type VoteResponse Vote
