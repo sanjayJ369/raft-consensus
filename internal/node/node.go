@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/sanjayJ369/raft-consensus/internal/log"
-	simpletimer "github.com/sanjayJ369/raft-consensus/internal/simpleTimer"
 	statemachine "github.com/sanjayJ369/raft-consensus/internal/stateMachine"
 	"github.com/sanjayJ369/raft-consensus/internal/types"
 )
@@ -34,11 +33,11 @@ const (
 type Node struct {
 	// node and cluster info
 	state          NodeState
-	Id             types.NodeId         // Node Id
-	smachine       statemachine.KVStore // state machine which is simple key value store
-	peerIDs        []types.NodeId       // other nodes in the cluster
-	nodesInCluster int                  // number of peers + 1
-	config         Config               // stores all the config fiels
+	Id             types.NodeId          // Node Id
+	smachine       *statemachine.KVStore // state machine which is simple key value store
+	peerIDs        []types.NodeId        // other nodes in the cluster
+	nodesInCluster int                   // number of peers + 1
+	config         Config                // stores all the config fiels
 
 	transport types.Transport // way to communicate with othern odes
 	lgr       types.Logger    // logger to log....
@@ -57,6 +56,11 @@ type Node struct {
 	matchIndex map[types.NodeId]types.Index
 }
 
+func (n *Node) AddPeer(id types.NodeId) {
+	n.peerIDs = append(n.peerIDs, id)
+	n.nodesInCluster++
+}
+
 // StartNewElection starts a new election
 // increment it's term
 // ask for votes to all other nodes
@@ -72,24 +76,23 @@ type Node struct {
 // InstallSnapshot RPC
 
 func NewNode(Id types.NodeId,
-	stateMachine statemachine.KVStore,
-	peerIDs []types.NodeId,
-	nodesInCluster int,
+	stateMachine *statemachine.KVStore,
 	config Config,
+	timer types.Timer,
 	transport types.Transport,
 	lgr types.Logger) *Node {
 	return &Node{
 		state:          Follower, // every node starts as follower
 		Id:             Id,
 		smachine:       stateMachine,
-		peerIDs:        peerIDs,
-		nodesInCluster: nodesInCluster,
+		nodesInCluster: 1,
+		peerIDs:        []types.NodeId{},
 		config:         config,
-		transport:      transport,
 		lgr:            lgr,
+		transport:      transport,
 
-		log:           make([]log.LogEntry, 100), // initally reserve like 100 log entries
-		electionTimer: simpletimer.NewSimpleTimer(),
+		log:           make([]log.LogEntry, 0, 100), // initally reserve like 100 log entries
+		electionTimer: timer,
 		term:          0, // start from term zero
 		votes:         0,
 		votedFor:      nil, // not yet voted

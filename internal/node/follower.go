@@ -24,12 +24,13 @@ func (n *Node) EnterFollower() {
 
 // Start starts election timeout timer
 func (n *Node) StartElectionTimer() {
-	duration := utils.RandomRangeInt64(
+	randDuration := utils.RandomRangeInt64(
 		int64(n.config.ElectionTimeoutMin),
 		int64(n.config.ElectionTimeoutMax))
 
+	duration := time.Duration(randDuration) * time.Nanosecond
 	n.lgr.Logf("started election timeout timer duration: %d", duration)
-	go n.electionTimer.Start(time.Duration(duration), n.EnterCandidate)
+	go n.electionTimer.Start(duration, n.EnterCandidate)
 }
 
 func (n *Node) ResetElectionTimer() {
@@ -41,32 +42,68 @@ func (n *Node) ResetElectionTimer() {
 // HandleVoteRequest handles the vote request received from the candidate
 // this is usually invoked by Transport.SendRequestVote
 func (n *Node) HandleVoteRequest(req types.VoteRequest) types.VoteResponse {
+
 	n.lgr.Logf("Received Vote Request From: %v, \t Request: %v", req.CanidateId, req)
+
+	// if already voted in this term don't vote again
+	if n.term >= req.Term || n.state != Follower {
+		// don't grant vote
+		return donotgrantVote(n, req)
+	}
+
+	lastLogIndex := len(n.log) - 1
+	// no log entries yet..
+	if lastLogIndex < 0 {
+		return grantVote(n, req)
+	}
+
+	lastLogEntry := n.log[lastLogIndex]
+
 	// grant an vote
 	// if the candidate has newer logs vote for them
 	// (safety mechanism)
-	lastLogEntry := n.log[len(n.log)]
+	// vote only if the follower has not
+	// previously voted in current term
+	if n.votedFor == nil && req.PrevLogTerm >= lastLogEntry.Term {
+		// last log entry has greater term
+		if req.PrevLogTerm > lastLogEntry.Term {
+			return grantVote(n, req)
+		} else if req.Term == lastLogEntry.Term &&
+			lastLogEntry.Index >= int(req.PrevLogIndex) {
+			// same term then longer logs are considered newer
+			return grantVote(n, req)
+		} else {
+			return donotgrantVote(n, req)
+		}
+	}
+
+	return donotgrantVote(n, req)
+}
+
+func donotgrantVote(n *Node, req types.VoteRequest) types.VoteResponse {
 	vote := types.Vote{
 		Term:        req.Term,
 		VoteGranted: false,
 		From:        n.Id,
 		To:          req.CanidateId,
 	}
+	n.lgr.Logf("Vote Response from:%d to:%d granted: %v", n.Id, req.CanidateId, vote.VoteGranted)
+	return types.VoteResponse(vote)
+}
 
-	// vote only if the follower has not
-	// previously voted in current term
-	if n.votedFor == nil && req.PrevLogTerm >= lastLogEntry.Term {
-		// last log entry has greater term
-		if req.PrevLogTerm > lastLogEntry.Term {
-			vote.VoteGranted = true
-		} else if req.Term == lastLogEntry.Term &&
-			lastLogEntry.Index >= int(req.PrevLogIndex) {
-			// same term then longer logs are considered newer
-			vote.VoteGranted = true
-		} else {
-			vote.VoteGranted = false
-		}
+func grantVote(n *Node, req types.VoteRequest) types.VoteResponse {
+	vote := types.Vote{
+		Term:        req.Term,
+		VoteGranted: true,
+		From:        n.Id,
+		To:          req.CanidateId,
 	}
+
+	n.votedFor = &req.CanidateId
+	n.term = req.Term
+	n.electionTimer.Restart()
+
+	n.lgr.Logf("Vote Response from:%d to:%d granted: %v", n.Id, req.CanidateId, vote.VoteGranted)
 
 	return types.VoteResponse(vote)
 }

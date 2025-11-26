@@ -3,11 +3,15 @@ package node
 import (
 	"math"
 
+	"github.com/sanjayJ369/raft-consensus/internal/log"
 	"github.com/sanjayJ369/raft-consensus/internal/types"
 )
 
 // StartLeader sets the state of the node to a candidate
 func (n *Node) EnterCandidate() {
+	// stop election timeout timer as currently in candidate state
+	n.electionTimer.Stop()
+
 	n.lgr.Logf("Entering Canidate State: nodeId: %v", n.Id)
 	// once the node enters a canidate state
 	// start a new election term
@@ -15,14 +19,19 @@ func (n *Node) EnterCandidate() {
 }
 
 func (n *Node) StartNewElectionTerm() {
-	n.lgr.Logf("Starting New Election Term: nodeId: %v", n.Id)
+	n.lgr.Logf("Starting New Election Term: nodeId: %v, oldterm: %d", n.Id, n.term)
 	// it should increment it's election term
 	n.term += 1
 	n.votedFor = &n.Id // vote itself
 	n.votes = 1
 
 	// todo: ask for the votes from other nodes
-	prevLog := n.log[len(n.log)-1] // get the most recent log
+	var prevLog log.LogEntry
+	prevlogIdx := len(n.log) - 1
+	if prevlogIdx >= 0 {
+		prevLog = n.log[prevlogIdx] // get the most recent log
+	}
+
 	for _, nodeId := range n.peerIDs {
 		go n.transport.SendVoteRequest(nodeId, types.VoteRequest{
 			CanidateId:   n.Id,
@@ -53,6 +62,7 @@ func (n *Node) HandleVoteResponse(res types.VoteResponse) {
 	}
 
 	if n.votes > int(majoryReq) {
+		n.lgr.Logf("!!!... received majority of vote.... becoming leader")
 		n.EnterLeader()
 	}
 }
