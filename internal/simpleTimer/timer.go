@@ -34,7 +34,6 @@ func (t *Timer) Start(duration time.Duration, f func()) {
 		for {
 			<-t.timer.C
 			f()
-			t.Reset()
 		}
 	}()
 }

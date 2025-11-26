@@ -9,10 +9,11 @@ import (
 
 // StartLeader sets the state of the node to a candidate
 func (n *Node) EnterCandidate() {
+	n.state = Candidate
 	// stop election timeout timer as currently in candidate state
-	n.electionTimer.Stop()
-
 	n.lgr.Logf("Entering Canidate State: nodeId: %v", n.Id)
+	n.ResetElectionTimer()
+
 	// once the node enters a canidate state
 	// start a new election term
 	n.StartNewElectionTerm()
@@ -49,8 +50,18 @@ func (n *Node) StartNewElectionTerm() {
 // synchronization (for example, holding the Node's lock) is in place
 // before calling this method.
 func (n *Node) HandleVoteResponse(res types.VoteResponse) {
+	n.Lock()
+
 	n.lgr.Logf("Recevied Response from Node: %v", res.From)
 	if n.state != Candidate {
+		n.Unlock()
+		return
+	}
+
+	// receives a response from a legit leader
+	if res.Term > n.term {
+		n.Unlock()
+		n.EnterFollower()
 		return
 	}
 
@@ -63,6 +74,10 @@ func (n *Node) HandleVoteResponse(res types.VoteResponse) {
 
 	if n.votes > int(majoryReq) {
 		n.lgr.Logf("!!!... received majority of vote.... becoming leader")
+		n.Unlock()
 		n.EnterLeader()
+		return
 	}
+
+	n.Unlock()
 }

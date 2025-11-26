@@ -1,6 +1,9 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/sanjayJ369/raft-consensus/internal/node"
@@ -12,25 +15,27 @@ import (
 
 func main() {
 	done := make(chan bool)
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
 	// simple config
 	config := node.Config{
-		HeartBeatTimeout:   1 * time.Second,
-		ElectionTimeoutMin: 2 * time.Second,
-		ElectionTimeoutMax: 5 * time.Second,
+		HeartBeatTimeout:   10 * time.Millisecond,
+		ElectionTimeoutMin: 5000 * time.Millisecond,
+		ElectionTimeoutMax: 10000 * time.Millisecond,
 	}
 
 	// let me starting with 3 nodes
 	nodes := make(map[types.NodeId]*node.Node)
 	network := make(simpletransport.Network)
 
-	lgr1, close1 := logger.NewLoggerFile("./logs/node1.log")
+	lgr1, close1 := logger.NewLoggerFile("./logs/node1.log", true)
 	defer close1()
 
-	lgr2, close2 := logger.NewLoggerFile("./logs/node2.log")
+	lgr2, close2 := logger.NewLoggerFile("./logs/node2.log", true)
 	defer close2()
 
-	lgr3, close3 := logger.NewLoggerFile("./logs/node3.log")
+	lgr3, close3 := logger.NewLoggerFile("./logs/node3.log", true)
 	defer close3()
 
 	loggers := []types.Logger{
@@ -61,6 +66,15 @@ func main() {
 	for _, node := range nodes {
 		go node.EnterFollower()
 	}
+
+	// flush logs to disk
+	go func() {
+		<-signalChan
+		for _, lgr := range loggers {
+			lgr.Sync()
+		}
+		os.Exit(1)
+	}()
 
 	<-done
 }

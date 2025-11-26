@@ -1,6 +1,7 @@
 package node
 
 import (
+	"sync"
 	"time"
 
 	"github.com/sanjayJ369/raft-consensus/internal/log"
@@ -31,6 +32,8 @@ const (
 // Node represents the state of each server node
 // in a general distributed systems setting
 type Node struct {
+	sync.Mutex // handle concurrent vote requests
+
 	// node and cluster info
 	state          NodeState
 	Id             types.NodeId          // Node Id
