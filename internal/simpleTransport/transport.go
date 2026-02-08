@@ -5,8 +5,8 @@
 package simpletransport
 
 import (
-	"github.com/sanjayJ369/raft-consensus/internal/node"
-	"github.com/sanjayJ369/raft-consensus/internal/types"
+	"github.com/sanjayJ369/raft-consensus/internal/core/node"
+	"github.com/sanjayJ369/raft-consensus/internal/core/types"
 )
 
 type Network map[types.NodeId]*node.Node

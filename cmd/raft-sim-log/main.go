@@ -6,10 +6,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/sanjayJ369/raft-consensus/internal/node"
+	"github.com/sanjayJ369/raft-consensus/internal/core/node"
 	simpletimer "github.com/sanjayJ369/raft-consensus/internal/simpleTimer"
 	simpletransport "github.com/sanjayJ369/raft-consensus/internal/simpleTransport"
-	"github.com/sanjayJ369/raft-consensus/internal/types"
+	"github.com/sanjayJ369/raft-consensus/internal/core/types"
 	"github.com/sanjayJ369/raft-consensus/logger"
 )
 
