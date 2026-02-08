@@ -6,10 +6,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/sanjayJ369/raft-consensus/internal/node"
-	simpletimer "github.com/sanjayJ369/raft-consensus/internal/simpleTimer"
-	simpletransport "github.com/sanjayJ369/raft-consensus/internal/simpleTransport"
-	"github.com/sanjayJ369/raft-consensus/internal/types"
+	"github.com/sanjayJ369/raft-consensus/internal/core/node"
+	"github.com/sanjayJ369/raft-consensus/internal/core/types"
+	"github.com/sanjayJ369/raft-consensus/internal/impl/simple"
 	"github.com/sanjayJ369/raft-consensus/logger"
 )
 
@@ -27,7 +26,7 @@ func main() {
 
 	// let me starting with 3 nodes
 	nodes := make(map[types.NodeId]*node.Node)
-	network := make(simpletransport.Network)
+	network := make(simple.Network)
 
 	lgr1, close1 := logger.NewLoggerFile("./logs/node1.log", true)
 	defer close1()
@@ -45,10 +44,10 @@ func main() {
 	// create nodes
 	for i := range 3 {
 		nodeId := types.NodeId(i)
-		timer := simpletimer.NewSimpleTimer()
+		timer := simple.NewSimpleTimer()
 		// logger := logger.NewLogger(os.Stdout)
 
-		transport := simpletransport.NewSimpleTransport(nodeId, &network, loggers[i])
+		transport := simple.NewSimpleTransport(nodeId, &network, loggers[i])
 		node := node.NewNode(nodeId, nil, config, timer, transport, loggers[i])
 		network.Register(nodeId, node)
 

@@ -1,7 +1,10 @@
-// Package simpletimer is an implementation of the Timer interface.
-package simpletimer
+// implementation of the Timer interface.
+package simple
 
-import "time"
+import (
+	"log"
+	"time"
+)
 
 type Timer struct {
 	duration time.Duration
@@ -13,6 +16,11 @@ func NewSimpleTimer() *Timer {
 	return &Timer{
 		stop: make(chan bool),
 	}
+}
+
+func (t *Timer) ElapaseTime() float64 {
+	log.Fatalln("elapase time should not be used for simple timer")
+	return 0
 }
 
 func (t *Timer) Stop() {

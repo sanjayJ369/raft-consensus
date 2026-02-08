@@ -4,9 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sanjayJ369/raft-consensus/internal/log"
-	statemachine "github.com/sanjayJ369/raft-consensus/internal/stateMachine"
-	"github.com/sanjayJ369/raft-consensus/internal/types"
+	"github.com/sanjayJ369/raft-consensus/internal/core/types"
+	"github.com/sanjayJ369/raft-consensus/internal/impl/log"
+	statemachine "github.com/sanjayJ369/raft-consensus/internal/impl/stateMachine"
 )
 
 // each node contains  several things
@@ -36,11 +36,11 @@ type Node struct {
 
 	// node and cluster info
 	state          NodeState
-	Id             types.NodeId          // Node Id
-	smachine       *statemachine.KVStore // state machine which is simple key value store
-	peerIDs        []types.NodeId        // other nodes in the cluster
-	nodesInCluster int                   // number of peers + 1
-	config         Config                // stores all the config fiels
+	Id             types.NodeId   // Node Id
+	smachine       types.DB       // state machine which is simple key value store
+	peerIDs        []types.NodeId // other nodes in the cluster
+	nodesInCluster int            // number of peers + 1
+	config         Config         // stores all the config fiels
 
 	transport types.Transport // way to communicate with othern odes
 	lgr       types.Logger    // logger to log....

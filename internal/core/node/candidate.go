@@ -3,8 +3,8 @@ package node
 import (
 	"math"
 
-	"github.com/sanjayJ369/raft-consensus/internal/log"
-	"github.com/sanjayJ369/raft-consensus/internal/types"
+	"github.com/sanjayJ369/raft-consensus/internal/core/types"
+	"github.com/sanjayJ369/raft-consensus/internal/impl/log"
 )
 
 // StartLeader sets the state of the node to a candidate

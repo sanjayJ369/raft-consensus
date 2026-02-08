@@ -1,12 +1,12 @@
-// Package simpletransport is an implementation of the Transport interface.
+//	implementation of the Transport interface.
 //
 // It simply calls the methods from nodes without
 // making any actual communication.
-package simpletransport
+package simple
 
 import (
-	"github.com/sanjayJ369/raft-consensus/internal/node"
-	"github.com/sanjayJ369/raft-consensus/internal/types"
+	"github.com/sanjayJ369/raft-consensus/internal/core/node"
+	"github.com/sanjayJ369/raft-consensus/internal/core/types"
 )
 
 type Network map[types.NodeId]*node.Node
@@ -43,6 +43,7 @@ func (t *Transport) SendVoteRequest(id types.NodeId, req types.VoteRequest) {
 		return
 	}
 
+	// directly calling handler of peer node
 	resp := peer.HandleVoteRequest(req)
 
 	self, ok := (*t.Hub)[t.NodeId]
@@ -51,4 +52,8 @@ func (t *Transport) SendVoteRequest(id types.NodeId, req types.VoteRequest) {
 		return
 	}
 	self.HandleVoteResponse(resp)
+}
+
+func (t *Transport) SendVoteResponse(id types.NodeId, res types.VoteResponse) {
+
 }

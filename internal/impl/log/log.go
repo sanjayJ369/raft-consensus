@@ -1,7 +1,7 @@
 package log
 
 import (
-	"github.com/sanjayJ369/raft-consensus/internal/types"
+	"github.com/sanjayJ369/raft-consensus/internal/core/types"
 )
 
 type LogEntry struct {

@@ -6,4 +6,5 @@ type Timer interface {
 	Stop()
 	Start(time.Duration, func()) // on timeout call the given function
 	Restart()
+	ElapaseTime() float64
 }

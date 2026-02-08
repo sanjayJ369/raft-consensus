@@ -3,7 +3,7 @@ package statemachine
 import (
 	"fmt"
 
-	"github.com/sanjayJ369/raft-consensus/internal/types"
+	"github.com/sanjayJ369/raft-consensus/internal/core/types"
 )
 
 // KVStore is a simple in memory
