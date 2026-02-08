@@ -3,8 +3,8 @@ package node
 import (
 	"math"
 
+	"github.com/sanjayJ369/raft-consensus/internal/core/types"
 	"github.com/sanjayJ369/raft-consensus/internal/log"
-	"github.com/sanjayJ369/raft-consensus/internal/types"
 )
 
 // StartLeader sets the state of the node to a candidate
@@ -38,7 +38,7 @@ func (n *Node) StartNewElectionTerm() {
 			CanidateId:   n.Id,
 			FollowerId:   nodeId,
 			Term:         n.term,
-			PrevLogTerm:  prevLog.Term,
+			PrevLogTerm:  types.Term(prevLog.Term),
 			PrevLogIndex: types.Index(prevLog.Index),
 		})
 	}

@@ -3,7 +3,7 @@ package node
 import (
 	"time"
 
-	"github.com/sanjayJ369/raft-consensus/internal/types"
+	"github.com/sanjayJ369/raft-consensus/internal/core/types"
 	"github.com/sanjayJ369/raft-consensus/utils"
 )
 
