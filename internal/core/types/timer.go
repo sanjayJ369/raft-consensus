@@ -4,7 +4,8 @@ import "time"
 
 type Timer interface {
 	Stop()
-	Start(time.Duration, func()) // on timeout call the given function
+	Start(time.Duration, func())
 	Restart()
-	ElapaseTime() float64
+	Elapsed() time.Duration
+	Duration() time.Duration
 }

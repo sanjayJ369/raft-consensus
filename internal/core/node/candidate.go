@@ -9,9 +9,9 @@ import (
 
 // StartLeader sets the state of the node to a candidate
 func (n *Node) EnterCandidate() {
-	n.state = Candidate
+	n.State = Candidate
 	// stop election timeout timer as currently in candidate state
-	n.lgr.Logf("Entering Canidate State: nodeId: %v", n.Id)
+	n.lgr.Logf("Entering Canidate State: nodeId: %v", n.ID)
 	n.ResetElectionTimer()
 
 	// once the node enters a canidate state
@@ -20,24 +20,27 @@ func (n *Node) EnterCandidate() {
 }
 
 func (n *Node) StartNewElectionTerm() {
-	n.lgr.Logf("Starting New Election Term: nodeId: %v, oldterm: %d", n.Id, n.term)
+	n.Lock()
+	defer n.Unlock()
+
+	n.lgr.Logf("Starting New Election Term: nodeId: %v, oldterm: %d", n.ID, n.Term)
 	// it should increment it's election term
-	n.term += 1
-	n.votedFor = &n.Id // vote itself
-	n.votes = 1
+	n.Term += 1
+	n.VotedFor = &n.ID // vote itself
+	n.Votes = 1
 
 	// todo: ask for the votes from other nodes
 	var prevLog log.LogEntry
-	prevlogIdx := len(n.log) - 1
+	prevlogIdx := len(n.Log) - 1
 	if prevlogIdx >= 0 {
-		prevLog = n.log[prevlogIdx] // get the most recent log
+		prevLog = n.Log[prevlogIdx] // get the most recent log
 	}
 
-	for _, nodeId := range n.peerIDs {
-		go n.transport.SendVoteRequest(nodeId, types.VoteRequest{
-			CanidateId:   n.Id,
+	for _, nodeId := range n.PeerIDs {
+		go n.Transport.SendVoteRequest(nodeId, types.VoteRequest{
+			CandidateId:  n.ID,
 			FollowerId:   nodeId,
-			Term:         n.term,
+			Term:         n.Term,
 			PrevLogTerm:  prevLog.Term,
 			PrevLogIndex: types.Index(prevLog.Index),
 		})
@@ -53,13 +56,9 @@ func (n *Node) HandleVoteResponse(res types.VoteResponse) {
 	n.Lock()
 
 	n.lgr.Logf("Recevied Response from Node: %v", res.From)
-	if n.state != Candidate {
-		n.Unlock()
-		return
-	}
 
 	// receives a response from a legit leader
-	if res.Term > n.term {
+	if res.Term > n.Term {
 		n.Unlock()
 		n.EnterFollower()
 		return
@@ -67,12 +66,12 @@ func (n *Node) HandleVoteResponse(res types.VoteResponse) {
 
 	// if recevied majority of the votes
 	// become leader
-	majoryReq := math.Ceil(float64(n.nodesInCluster) / 2)
+	majoryReq := math.Ceil(float64(n.NodesInCluster) / 2)
 	if res.VoteGranted {
-		n.votes++
+		n.Votes++
 	}
 
-	if n.votes > int(majoryReq) {
+	if n.Votes >= int(majoryReq) {
 		n.lgr.Logf("!!!... received majority of vote.... becoming leader")
 		n.Unlock()
 		n.EnterLeader()

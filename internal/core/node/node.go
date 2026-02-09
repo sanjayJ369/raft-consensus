@@ -6,7 +6,6 @@ import (
 
 	"github.com/sanjayJ369/raft-consensus/internal/core/types"
 	"github.com/sanjayJ369/raft-consensus/internal/impl/log"
-	statemachine "github.com/sanjayJ369/raft-consensus/internal/impl/stateMachine"
 )
 
 // each node contains  several things
@@ -35,33 +34,44 @@ type Node struct {
 	sync.Mutex // handle concurrent vote requests
 
 	// node and cluster info
-	state          NodeState
-	Id             types.NodeId   // Node Id
-	smachine       types.DB       // state machine which is simple key value store
-	peerIDs        []types.NodeId // other nodes in the cluster
-	nodesInCluster int            // number of peers + 1
-	config         Config         // stores all the config fiels
+	State          NodeState
+	ID             types.NodeID   // Node Id
+	StateMachine   types.DB       // state machine which is simple key value store
+	PeerIDs        []types.NodeID // other nodes in the cluster
+	NodesInCluster int            // number of peers + 1
+	Config         Config         // stores all the config fiels
 
-	transport types.Transport // way to communicate with othern odes
+	Transport types.Transport // way to communicate with othern odes
 	lgr       types.Logger    // logger to log....
 
 	// node states
-	log           []log.LogEntry // replicated log store
-	electionTimer types.Timer    // election timer
-	term          types.Term     // current election term
-	votes         int            // votes of the current term
-	votedFor      *types.NodeId  // to whom did the node vote for in the current term
-	lastApplied   types.Index    // last log entry that is being applied to the state machine
-	comittedIndex types.Index    // highest log entry that is known to be comitted
+	Log           []log.LogEntry // replicated log store
+	ElectionTimer types.Timer    // election timer
+	Term          types.Term     // current election term
+	Votes         int            // votes of the current term
+	VotedFor      *types.NodeID  // to whom did the node vote for in the current term
+	LastApplied   types.Index    // last log entry that is being applied to the state machine
+	ComittedIndex types.Index    // highest log entry that is known to be comitted
 
 	// leader specific states
-	nextIndex  map[types.NodeId]types.Index // index to be shared with the follower
-	matchIndex map[types.NodeId]types.Index
+	nextIndex  map[types.NodeID]types.Index // index to be shared with the follower
+	matchIndex map[types.NodeID]types.Index
 }
 
-func (n *Node) AddPeer(id types.NodeId) {
-	n.peerIDs = append(n.peerIDs, id)
-	n.nodesInCluster++
+func (n *Node) AddPeer(id types.NodeID) {
+	n.PeerIDs = append(n.PeerIDs, id)
+	n.NodesInCluster++
+}
+
+func (n *Node) ElectionProgress() float64 {
+	elapsed := n.ElectionTimer.Elapsed()
+	duration := n.ElectionTimer.Duration()
+
+	if duration == 0 {
+		return 0
+	}
+
+	return float64(elapsed) / float64(duration)
 }
 
 // StartNewElection starts a new election
@@ -78,32 +88,32 @@ func (n *Node) AddPeer(id types.NodeId) {
 // AppendEntriesRPC
 // InstallSnapshot RPC
 
-func NewNode(Id types.NodeId,
-	stateMachine *statemachine.KVStore,
+func NewNode(Id types.NodeID,
+	stateMachine types.DB,
 	config Config,
 	timer types.Timer,
 	transport types.Transport,
 	lgr types.Logger) *Node {
 	return &Node{
-		state:          Follower, // every node starts as follower
-		Id:             Id,
-		smachine:       stateMachine,
-		nodesInCluster: 1,
-		peerIDs:        []types.NodeId{},
-		config:         config,
+		State:          Follower, // every node starts as follower
+		ID:             Id,
+		StateMachine:   stateMachine,
+		NodesInCluster: 1,
+		PeerIDs:        []types.NodeID{},
+		Config:         config,
 		lgr:            lgr,
-		transport:      transport,
+		Transport:      transport,
 
-		log:           make([]log.LogEntry, 0, 100), // initally reserve like 100 log entries
-		electionTimer: timer,
-		term:          0, // start from term zero
-		votes:         0,
-		votedFor:      nil, // not yet voted
-		lastApplied:   -1,
-		comittedIndex: -1,
+		Log:           make([]log.LogEntry, 0, 100), // initally reserve like 100 log entries
+		ElectionTimer: timer,
+		Term:          0, // start from term zero
+		Votes:         0,
+		VotedFor:      nil, // not yet voted
+		LastApplied:   -1,
+		ComittedIndex: -1,
 
 		// leader specific states
-		nextIndex:  make(map[types.NodeId]types.Index),
-		matchIndex: make(map[types.NodeId]types.Index),
+		nextIndex:  make(map[types.NodeID]types.Index),
+		matchIndex: make(map[types.NodeID]types.Index),
 	}
 }

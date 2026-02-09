@@ -9,19 +9,19 @@ import (
 	"github.com/sanjayJ369/raft-consensus/internal/core/types"
 )
 
-type Network map[types.NodeId]*node.Node
+type Network map[types.NodeID]*node.Node
 
-func (n *Network) Register(nodeId types.NodeId, node *node.Node) {
-	(*n)[node.Id] = node
+func (n *Network) Register(nodeId types.NodeID, node *node.Node) {
+	(*n)[node.ID] = node
 }
 
 type Transport struct {
-	NodeId types.NodeId
+	NodeId types.NodeID
 	Hub    *Network
 	lgr    types.Logger
 }
 
-func NewSimpleTransport(nodeId types.NodeId,
+func NewSimpleTransport(nodeId types.NodeID,
 	hub *Network,
 	lgr types.Logger) *Transport {
 	transport := &Transport{
@@ -33,7 +33,7 @@ func NewSimpleTransport(nodeId types.NodeId,
 	return transport
 }
 
-func (t *Transport) SendVoteRequest(id types.NodeId, req types.VoteRequest) {
+func (t *Transport) SendVoteRequest(id types.NodeID, req types.VoteRequest) {
 	t.lgr.Logf("Sending Vote Request, From: %v, \t To: %v", t.NodeId, id)
 
 	peer, ok := (*t.Hub)[id]
@@ -44,16 +44,15 @@ func (t *Transport) SendVoteRequest(id types.NodeId, req types.VoteRequest) {
 	}
 
 	// directly calling handler of peer node
-	resp := peer.HandleVoteRequest(req)
+	peer.HandleVoteRequest(req)
 
-	self, ok := (*t.Hub)[t.NodeId]
-	if !ok || self == nil {
+}
+
+func (t *Transport) SendVoteResponse(id types.NodeID, res types.VoteResponse) {
+	peer, ok := (*t.Hub)[id]
+	if !ok || peer == nil {
 		t.lgr.Logf("Origin node not found in hub, id:%v", t.NodeId)
 		return
 	}
-	self.HandleVoteResponse(resp)
-}
-
-func (t *Transport) SendVoteResponse(id types.NodeId, res types.VoteResponse) {
-
+	peer.HandleVoteResponse(res)
 }

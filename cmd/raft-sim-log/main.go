@@ -25,7 +25,7 @@ func main() {
 	}
 
 	// let me starting with 3 nodes
-	nodes := make(map[types.NodeId]*node.Node)
+	nodes := make(map[types.NodeID]*node.Node)
 	network := make(simple.Network)
 
 	lgr1, close1 := logger.NewLoggerFile("./logs/node1.log", true)
@@ -43,7 +43,7 @@ func main() {
 
 	// create nodes
 	for i := range 3 {
-		nodeId := types.NodeId(i)
+		nodeId := types.NodeID(i)
 		timer := simple.NewSimpleTimer()
 		// logger := logger.NewLogger(os.Stdout)
 
@@ -54,11 +54,11 @@ func main() {
 		// add nodes in cluster as peers for new node
 		// add new node as peer to all the prev nodes
 		for _, n := range nodes {
-			node.AddPeer(n.Id)
+			node.AddPeer(n.ID)
 			n.AddPeer(nodeId)
 		}
 
-		nodes[node.Id] = node
+		nodes[node.ID] = node
 	}
 
 	// start nodes
