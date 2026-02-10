@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/sanjayJ369/raft-consensus/internal/core/types"
-	"github.com/sanjayJ369/raft-consensus/internal/impl/log"
 )
 
 // each node contains  several things
@@ -45,13 +44,13 @@ type Node struct {
 	lgr       types.Logger    // logger to log....
 
 	// node states
-	Log           []log.LogEntry // replicated log store
-	ElectionTimer types.Timer    // election timer
-	Term          types.Term     // current election term
-	Votes         int            // votes of the current term
-	VotedFor      *types.NodeID  // to whom did the node vote for in the current term
-	LastApplied   types.Index    // last log entry that is being applied to the state machine
-	ComittedIndex types.Index    // highest log entry that is known to be comitted
+	Log           []types.LogEntry // replicated log store
+	Timer         types.Timer      // election timer or heartbeat timer
+	Term          types.Term       // current election term
+	Votes         int              // votes of the current term
+	VotedFor      *types.NodeID    // to whom did the node vote for in the current term
+	LastApplied   types.Index      // last log entry that is being applied to the state machine
+	ComittedIndex types.Index      // highest log entry that is known to be comitted
 
 	// leader specific states
 	nextIndex  map[types.NodeID]types.Index // index to be shared with the follower
@@ -64,8 +63,8 @@ func (n *Node) AddPeer(id types.NodeID) {
 }
 
 func (n *Node) ElectionProgress() float64 {
-	elapsed := n.ElectionTimer.Elapsed()
-	duration := n.ElectionTimer.Duration()
+	elapsed := n.Timer.Elapsed()
+	duration := n.Timer.Duration()
 
 	if duration == 0 {
 		return 0
@@ -104,8 +103,8 @@ func NewNode(Id types.NodeID,
 		lgr:            lgr,
 		Transport:      transport,
 
-		Log:           make([]log.LogEntry, 0, 100), // initally reserve like 100 log entries
-		ElectionTimer: timer,
+		Log:           make([]types.LogEntry, 0, 100), // initally reserve like 100 log entries
+		Timer:         timer,
 		Term:          0, // start from term zero
 		Votes:         0,
 		VotedFor:      nil, // not yet voted

@@ -4,7 +4,6 @@ import (
 	"math"
 
 	"github.com/sanjayJ369/raft-consensus/internal/core/types"
-	"github.com/sanjayJ369/raft-consensus/internal/impl/log"
 )
 
 // StartLeader sets the state of the node to a candidate
@@ -29,14 +28,15 @@ func (n *Node) StartNewElectionTerm() {
 	n.VotedFor = &n.ID // vote itself
 	n.Votes = 1
 
-	// todo: ask for the votes from other nodes
-	var prevLog log.LogEntry
+	//  ask for the votes from other nodes
+	var prevLog types.LogEntry
 	prevlogIdx := len(n.Log) - 1
 	if prevlogIdx >= 0 {
 		prevLog = n.Log[prevlogIdx] // get the most recent log
 	}
 
 	for _, nodeId := range n.PeerIDs {
+		n.lgr.Logf("sending.... vote request from: %d, to: %d", n.ID, nodeId)
 		go n.Transport.SendVoteRequest(nodeId, types.VoteRequest{
 			CandidateId:  n.ID,
 			FollowerId:   nodeId,

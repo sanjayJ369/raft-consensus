@@ -100,7 +100,7 @@ func (m *Manager) RegisterNode(node *NodeGUI) {
 
 func (m *Manager) SendVoteRequest(from, to types.NodeID, req types.VoteRequest) {
 	NewMessage(m, from, to, VOTE_REQUEST_MESSAGE, req)
-	m.lgr.Logf("send vote request from: %d, to: %d, resp: %v", from, to, req)
+	m.lgr.Logf("sent vote request from: %d, to: %d, resp: %v", from, to, req)
 }
 
 func (m *Manager) SendVoteResponse(from, to types.NodeID, resp types.VoteResponse) {
@@ -110,5 +110,20 @@ func (m *Manager) SendVoteResponse(from, to types.NodeID, resp types.VoteRespons
 	} else {
 		NewMessage(m, from, to, VOTE_RESPONSE_NO_MESSAGE, resp)
 	}
-	m.lgr.Logf("send vote response from: %d, to: %d, resp: %v", from, to, resp)
+	m.lgr.Logf("sent vote response from: %d, to: %d, resp: %v", from, to, resp)
+}
+
+func (m *Manager) SendAppendEntriesRequest(from, to types.NodeID, req types.AppendEntriesRequest) {
+	if len(req.Entries) == 0 {
+		NewMessage(m, from, to, HEARTBEAT_MESSAGE, req) // heartbeat
+		m.lgr.Logf("sent heartbeat message from %d, to %d", from, to)
+	} else {
+		NewMessage(m, from, to, APPEND_ENTRIES_REQUEST_MESSAGE, req)
+		m.lgr.Logf("sent append entry message from %d, to %d, entries:%v", from, to, req.Entries)
+	}
+}
+
+func (m *Manager) SendAppendEntriesResponse(from, to types.NodeID, resp types.AppendEntriesResponse) {
+	NewMessage(m, from, to, APPEND_ENTRIES_RESPONSE_MESSAGE, resp)
+	m.lgr.Logf("sent append entry response message from:%d, to:%d", from, to)
 }

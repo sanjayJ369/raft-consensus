@@ -4,7 +4,6 @@ import rl "github.com/gen2brain/raylib-go/raylib"
 
 type CircularLoader struct {
 	Pos         rl.Vector2
-	LoaderColor rl.Color
 	BorderColor rl.Color
 	Radius      float32
 	Thickness   float32
@@ -14,7 +13,6 @@ type CircularLoader struct {
 func NewCircularLoader(x, y, radius float32) *CircularLoader {
 	return &CircularLoader{
 		Pos:         rl.NewVector2(x, y),
-		LoaderColor: rl.SkyBlue,
 		BorderColor: rl.DarkBlue,
 		Radius:      radius,
 		Thickness:   10,
@@ -26,7 +24,7 @@ func (c *CircularLoader) Update(angle float32) {
 	c.ArcSize = angle
 }
 
-func (c *CircularLoader) Render() {
+func (c *CircularLoader) Render(color rl.Color) {
 
 	innerRadius := c.Radius - c.Thickness
 	outerRadius := c.Radius
@@ -53,6 +51,6 @@ func (c *CircularLoader) Render() {
 		startAngle,
 		endAngle,
 		100,
-		c.LoaderColor,
+		color,
 	)
 }

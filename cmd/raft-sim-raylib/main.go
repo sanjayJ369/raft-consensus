@@ -74,14 +74,32 @@ func main() {
 
 	rl.InitWindow(WIN_WIDTH, WIN_HEIGHT, "Raft Consensus Simulation")
 
-	lgr, closeLogger := logger.NewLoggerFile("./logs/node.log", true)
-	defer closeLogger()
+	// --- LOGGING SETUP START ---
 
-	manager := graphics.NewManager(lgr)
+	// 1. Manager Logger
+	mgrLogger, closeMgr := logger.NewLoggerFile("./logs/manager.log", true)
+	defer closeMgr()
 
-	node1 := graphics.NewNodeGUI(WIN_WIDTH, WIN_HEIGHT, lgr)
-	node2 := graphics.NewNodeGUI(WIN_WIDTH, WIN_HEIGHT, lgr)
-	node3 := graphics.NewNodeGUI(WIN_WIDTH, WIN_HEIGHT, lgr)
+	// 2. Node 1 Logger
+	node1Logger, closeNode1 := logger.NewLoggerFile("./logs/node1.log", true)
+	defer closeNode1()
+
+	// 3. Node 2 Logger
+	node2Logger, closeNode2 := logger.NewLoggerFile("./logs/node2.log", true)
+	defer closeNode2()
+
+	// 4. Node 3 Logger
+	node3Logger, closeNode3 := logger.NewLoggerFile("./logs/node3.log", true)
+	defer closeNode3()
+
+	// --- LOGGING SETUP END ---
+
+	// Initialize components with their specific loggers
+	manager := graphics.NewManager(mgrLogger)
+
+	node1 := graphics.NewNodeGUI(WIN_WIDTH, WIN_HEIGHT, node1Logger)
+	node2 := graphics.NewNodeGUI(WIN_WIDTH, WIN_HEIGHT, node2Logger)
+	node3 := graphics.NewNodeGUI(WIN_WIDTH, WIN_HEIGHT, node3Logger)
 
 	manager.RegisterNode(node1)
 	manager.RegisterNode(node2)
@@ -98,7 +116,7 @@ func main() {
 
 	manager.StartNodes()
 
-	rl.SetTargetFPS(60)
+	rl.SetTargetFPS(30)
 
 	// Graceful shutdown handler
 	go func() {

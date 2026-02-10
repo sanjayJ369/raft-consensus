@@ -17,6 +17,8 @@ const (
 	VOTE_REQUEST_MESSAGE
 	VOTE_RESPONSE_YES_MESSAGE
 	VOTE_RESPONSE_NO_MESSAGE
+	APPEND_ENTRIES_REQUEST_MESSAGE
+	APPEND_ENTRIES_RESPONSE_MESSAGE
 )
 
 const (
@@ -29,10 +31,12 @@ const (
 )
 
 var (
-	HEARTBEAT_COLOR         = rl.SkyBlue
-	VOTE_REQUEST_COLOR      = rl.Orange
-	VOTE_RESPONSE_YES_COLOR = rl.Green
-	VOTE_RESPONSE_NO_COLOR  = rl.Red
+	HEARTBEAT_COLOR           = rl.SkyBlue
+	VOTE_REQUEST_COLOR        = rl.Orange
+	VOTE_RESPONSE_YES_COLOR   = rl.Green
+	VOTE_RESPONSE_NO_COLOR    = rl.Red
+	APPEND_ENTRIES_REQ_COLOR  = rl.Purple
+	APPEND_ENTRIES_RESP_COLOR = rl.Magenta
 )
 
 type Message struct {
@@ -178,15 +182,19 @@ func (m *Message) Render() {
 // Helper to shorten message types for the UI
 // You should add this function or integrate it into your logic
 func getShortMsgType(t MessageType) string {
-	// Assuming you have an Enum or Int for MessageType
-	// Adjust cases based on your actual Type definition
 	switch t {
+	case HEARTBEAT_MESSAGE:
+		return "HB"
 	case VOTE_REQUEST_MESSAGE:
 		return "RV"
 	case VOTE_RESPONSE_NO_MESSAGE:
 		return "VRN"
 	case VOTE_RESPONSE_YES_MESSAGE:
 		return "VRY"
+	case APPEND_ENTRIES_REQUEST_MESSAGE:
+		return "AE"
+	case APPEND_ENTRIES_RESPONSE_MESSAGE:
+		return "AER"
 	default:
 		return "?"
 	}
@@ -202,6 +210,10 @@ func colorForMessageType(t MessageType) rl.Color {
 		return VOTE_RESPONSE_YES_COLOR
 	case VOTE_RESPONSE_NO_MESSAGE:
 		return VOTE_RESPONSE_NO_COLOR
+	case APPEND_ENTRIES_REQUEST_MESSAGE:
+		return APPEND_ENTRIES_REQ_COLOR
+	case APPEND_ENTRIES_RESPONSE_MESSAGE:
+		return APPEND_ENTRIES_RESP_COLOR
 	default:
 		return rl.Gray
 	}

@@ -34,7 +34,7 @@ func NewNodeGUI(width, height int32, lgr types.Logger) *NodeGUI {
 	timer := simple.NewSimpleTimer()
 
 	config := node.Config{
-		HeartBeatTimeout:   10 * time.Millisecond,
+		HeartBeatTimeout:   3000 * time.Millisecond,
 		ElectionTimeoutMin: 10000 * time.Millisecond,
 		ElectionTimeoutMax: 15000 * time.Millisecond,
 	}
@@ -74,6 +74,18 @@ func (n *NodeGUI) HandleMessage(message *Message) {
 			log.Fatalln("invalid message type")
 		}
 		n.Node.HandleVoteResponse(resp)
+	case HEARTBEAT_MESSAGE, APPEND_ENTRIES_REQUEST_MESSAGE:
+		req, ok := message.Payload.(types.AppendEntriesRequest)
+		if !ok {
+			log.Fatalln("invalid message type")
+		}
+		n.Node.HandleAppendEntriesRequest(req)
+	case APPEND_ENTRIES_RESPONSE_MESSAGE:
+		resp, ok := message.Payload.(types.AppendEntriesResponse)
+		if !ok {
+			log.Fatalln("invalid message type")
+		}
+		n.Node.HandleAppendEntriesResponse(resp)
 	}
 }
 
@@ -113,14 +125,14 @@ func (n *NodeGUI) Render() {
 	var stateColor rl.Color
 
 	// Assuming 0=Follower, 1=Candidate, 2=Leader
-	switch int(n.Node.State) {
-	case 0: // Follower
+	switch n.Node.State {
+	case node.Follower: // Follower
 		stateText = "FOLLOWER"
 		stateColor = rl.NewColor(100, 100, 100, 255) // Grey
-	case 1: // Candidate
+	case node.Candidate: // Candidate
 		stateText = "CANDIDATE"
 		stateColor = rl.NewColor(0, 121, 241, 255) // Blue
-	case 2: // Leader
+	case node.Leader: // Leader
 		stateText = "LEADER"
 		stateColor = rl.Gold
 	default:
@@ -142,7 +154,11 @@ func (n *NodeGUI) Render() {
 	rl.DrawRing(n.Pos, r-3, r, 0, 360, 30, rl.Fade(rl.White, 0.1))
 
 	// Timer Loader
-	n.timerLoader.Render()
+	var loaderColor rl.Color = rl.SkyBlue
+	if n.Node.State == node.Leader {
+		loaderColor = rl.Red // heartbeat timeout
+	}
+	n.timerLoader.Render(loaderColor)
 
 	// ---------------------------------------------------------
 	// 4. Typography

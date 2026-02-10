@@ -14,8 +14,9 @@ func (n *Node) EnterFollower() {
 	// things the follower must do
 
 	//  start election timeout timer
-	n.StartElectionTimer()
 	n.VotedFor = nil
+	n.State = Follower
+	n.StartElectionTimer()
 
 	// todo: handle appendEntries request
 	// todo: handle RequestVote request
@@ -30,12 +31,13 @@ func (n *Node) StartElectionTimer() {
 
 	duration := time.Duration(randDuration) * time.Nanosecond
 	n.lgr.Logf("started election timeout timer duration: %d", duration)
-	n.ElectionTimer.Start(duration, n.EnterCandidate)
+
+	n.Timer.Start(duration, n.EnterCandidate)
 }
 
 func (n *Node) ResetElectionTimer() {
 	n.lgr.Logf("Reset Election Timer NodeId: %v", n.ID)
-	n.ElectionTimer.Stop()
+	n.Timer.Stop()
 	n.StartElectionTimer()
 }
 
@@ -91,6 +93,9 @@ func (n *Node) HandleVoteRequest(req types.VoteRequest) {
 				granted = true
 				n.VotedFor = &req.CandidateId
 				n.ResetElectionTimer()
+				if n.State != Follower {
+					n.EnterFollower()
+				}
 				reason = "vote granted"
 			} else {
 				reason = "log not up to date"

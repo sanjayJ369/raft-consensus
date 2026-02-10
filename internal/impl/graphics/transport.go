@@ -25,3 +25,11 @@ func (mt MessageTransaport) SendVoteRequest(dest types.NodeID, req types.VoteReq
 func (mt MessageTransaport) SendVoteResponse(dest types.NodeID, resp types.VoteResponse) {
 	mt.manager.SendVoteResponse(mt.ID, dest, resp)
 }
+
+func (mt MessageTransaport) SendAppendEntriesRequest(dest types.NodeID, req types.AppendEntriesRequest) {
+	mt.manager.SendAppendEntriesRequest(mt.ID, dest, req)
+}
+
+func (mt MessageTransaport) SendAppendEntriesResponse(dest types.NodeID, resp types.AppendEntriesResponse) {
+	mt.manager.SendAppendEntriesResponse(mt.ID, dest, resp)
+}

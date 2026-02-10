@@ -32,6 +32,7 @@ func (l *Logger) Logf(format string, args ...any) {
 	timestamp := time.Now().UTC()
 	message := fmt.Sprintf(format, args...)
 	log := fmt.Sprintf("\n[%s]%s", timestamp, message)
+	fmt.Println(log)
 	l.writer.Write([]byte(log))
 	if l.logFile != nil && l.strict {
 		l.FileBuf.Flush()
